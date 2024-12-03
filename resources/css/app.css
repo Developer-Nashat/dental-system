@@ -1,0 +1,24 @@
+.v-table tbody tr:hover {
+    background-color: #e8eaf6;
+    color: #424242;
+}
+.v-table tbody tr {
+    color: #616161;
+}
+
+/* .v-table thead th {
+    color: #424242;
+} */
+
+/* .v-text-field .v-icon {
+    color: #3F51B5;
+} */
+
+.v-text-field {
+    color: #3f51b5;
+}
+
+.chip-hover:hover {
+    background-color: #3f51b5;
+    color: #e8eaf6;
+}
