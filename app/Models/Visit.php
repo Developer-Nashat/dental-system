@@ -2,15 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Visit extends Model
 {
-    /** @use HasFactory<\Database\Factories\VisitFactory> */
     use HasFactory, HasUuids;
 
     public $guarded = [];
@@ -24,19 +23,52 @@ class Visit extends Model
         });
     }
 
-    public function status(): HasOne
+    public function status()
     {
-        return $this->hasOne(Status::class, 'id', 'status_id');
+        return $this->belongsTo(Status::class, 'status_id', 'id');
     }
 
-    public function patient(): HasOne
+    public function patient()
     {
-        return $this->hasOne(Patient::class, 'id', 'patient_id');
+        return $this->belongsTo(Patient::class, 'patient_id', 'id');
     }
 
-
-    public function dentist(): HasOne
+    public function dentist()
     {
-        return $this->hasOne(User::class, 'id', 'dentist_id');
+        return $this->belongsTo(User::class, 'dentist_id', 'id');
+    }
+
+    public function problemTreatments(): HasMany
+    {
+        return $this->hasMany(ProblemTreatment::class);
+    }
+
+    public function treatments()
+    {
+        return $this->hasManyThrough(Treatment::class, ProblemTreatment::class, 'visit_id', 'id', 'id', 'treatment_id');
+    }
+
+    public function teeth()
+    {
+        return $this->hasManyThrough(
+            Tooth::class,
+            ProblemTreatment::class,
+            'visit_id', // Foreign key on ProblemTreatment table
+            'id',       // Foreign key on Tooth table
+            'id',       // Local key on Visit table
+            'tooth_id'  // Local key on ProblemTreatment table
+        );
+    }
+
+    public function problems()
+    {
+        return $this->hasManyThrough(
+            ProblemCatalog::class,
+            ProblemTreatment::class,
+            'visit_id',
+            'id',
+            'id',
+            'problem_id'
+        );
     }
 }

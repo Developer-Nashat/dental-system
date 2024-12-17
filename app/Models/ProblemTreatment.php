@@ -15,26 +15,26 @@ class ProblemTreatment extends Model
 
     public function visit()
     {
-        return $this->hasOne(Visit::class);
+        return $this->belongsTo(Visit::class);
     }
 
     public function treatment()
     {
-        return $this->hasOne(Treatment::class);
+        return $this->belongsTo(Treatment::class);
     }
 
     public function problem()
     {
-        return $this->hasOne(ProblemCatalog::class);
+        return $this->belongsTo(ProblemCatalog::class);
     }
 
     public function tooth()
     {
-        return $this->hasOne(Tooth::class);
+        return $this->belongsTo(Tooth::class);
     }
 
-    public function patient()
-    {
-        return $this->hasOneThrough(Patient::class, Visit::class);
-    }
+    // public function patient()
+    // {
+    //     return $this->hasOneThrough(Patient::class, Visit::class);
+    // }
 }

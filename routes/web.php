@@ -28,6 +28,14 @@ Route::middleware('auth')->group(function () {
         return Inertia('Home');
     })->name('Home');
 
+    Route::get('/PatientProfile', function () {
+        return Inertia('Management/PatientProfile');
+    })->name('PatientProfile');
+
+    Route::get('/PatientVisit', function () {
+        return Inertia('Management/PatientVisit');
+    })->name('PatientVisit');
+
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
     Route::controller(TreatmentController::class)->group(function () {
@@ -58,7 +66,7 @@ Route::middleware('auth')->group(function () {
     Route::controller(VisitController::class)->group(function () {
         Route::get('/visits', 'index')->name('visits');
         Route::post('/visit', 'store')->name("visit.store");
-        Route::get('/visit/{id}', 'show')->name('visit.show');
+        Route::get('/PatientVisit/{id}', 'show')->name('PatientVisit');
         Route::get('/visit/{id}/edit', 'edit')->name('visit.edit');
         Route::patch('/visit/{visit}', 'update')->name('visit.update');
         Route::delete('/visit/{visit}', 'destroy')->name('visit.delete');

@@ -1,308 +1,493 @@
 <template>
   <v-container fluid>
+    <!-- Page Header -->
     <v-row>
       <v-col cols="12">
-        <v-card class="mb-4">
-          <v-card-title class="text-h5 font-weight-bold primary white--text">
-            Dental Problem & Treatment Chart
-          </v-card-title>
+        <div class="d-flex align-center justify-space-between mb-6">
+          <h1 class="text-h4 font-weight-bold">Problem Treatments</h1>
+          <v-btn color="primary" prepend-icon="mdi-plus" @click="dialog = true">
+            New Treatment
+          </v-btn>
+        </div>
+      </v-col>
+    </v-row>
+
+    <!-- Filters -->
+    <v-row>
+      <v-col cols="12" sm="3">
+        <v-select
+          v-model="filters.status"
+          :items="['all', 'pending', 'in_progress', 'treated']"
+          label="Status"
+          hide-details
+          density="comfortable"
+        ></v-select>
+      </v-col>
+      <v-col cols="12" sm="3">
+        <v-select
+          v-model="filters.visit"
+          :items="sortedVisits"
+          item-title="date"
+          item-value="id"
+          label="Visit Date"
+          hide-details
+          density="comfortable"
+        ></v-select>
+      </v-col>
+      <v-col cols="12" sm="3">
+        <v-select
+          v-model="filters.problem"
+          :items="props.problems"
+          item-title="name"
+          item-value="id"
+          label="Problem"
+          hide-details
+          density="comfortable"
+        ></v-select>
+      </v-col>
+      <v-col cols="12" sm="3">
+        <v-select
+          v-model="filters.treatment"
+          :items="props.treatments"
+          item-title="name"
+          item-value="id"
+          label="Treatment"
+          hide-details
+          density="comfortable"
+        ></v-select>
+      </v-col>
+      <v-col cols="12" sm="3">
+        <v-text-field
+          v-model="filters.search"
+          label="Search"
+          prepend-inner-icon="mdi-magnify"
+          density="comfortable"
+          hide-details
+          clearable
+        ></v-text-field>
+      </v-col>
+    </v-row>
+
+    <!-- Treatment Cards -->
+    <v-row class="mt-4">
+      <v-col v-for="item in filteredTreatments" :key="item.id" cols="12" md="6" lg="4">
+        <v-card :class="{ 'border-treated': item.status === 'treated' }">
+          <v-card-item>
+            <template v-slot:prepend>
+              <v-icon size="32" :color="getStatusColor(item.status)">
+                {{ getStatusIcon(item.status) }}
+              </v-icon>
+            </template>
+
+            <template v-slot:append>
+              <v-chip :color="getStatusColor(item.status)" size="small">
+                {{ formatStatus(item.status) }}
+              </v-chip>
+            </template>
+          </v-card-item>
 
           <v-card-text>
-            <v-row>
-              <!-- Patient Info Section -->
-              <v-col cols="12" md="4">
-                <v-card outlined>
-                  <v-card-title class="subtitle-1">Patient Information</v-card-title>
-                  <v-card-text>
-                    <v-text-field
-                      v-model="patientName"
-                      label="Patient Name"
-                      outlined
-                      dense
-                    ></v-text-field>
-                    <v-text-field
-                      v-model="patientId"
-                      label="Patient ID"
-                      outlined
-                      dense
-                    ></v-text-field>
-                    <v-menu
-                      v-model="dateMenu"
-                      :close-on-content-click="false"
-                      transition="scale-transition"
-                      offset-y
-                      max-width="290px"
-                      min-width="290px"
-                    >
-                      <template v-slot:activator="{ on, attrs }">
-                        <v-text-field
-                          v-model="treatmentDate"
-                          label="Treatment Date"
-                          readonly
-                          outlined
-                          dense
-                          v-bind="attrs"
-                          v-on="on"
-                        ></v-text-field>
-                      </template>
-                      <v-date-picker
-                        v-model="treatmentDate"
-                        @input="dateMenu = false"
-                      ></v-date-picker>
-                    </v-menu>
-                  </v-card-text>
-                </v-card>
-              </v-col>
+            <v-list density="compact">
+              <v-list-item>
+                <template v-slot:prepend>
+                  <v-icon color="primary" size="small">mdi-tooth</v-icon>
+                </template>
+                <v-list-item-title class="text-subtitle-2">Tooth</v-list-item-title>
+                <v-list-item-subtitle>
+                  {{ item.tooth_id }} - {{ item.tooth_id }}
+                </v-list-item-subtitle>
+              </v-list-item>
 
-              <!-- Dental Chart Section -->
-              <v-col cols="12" md="8">
-                <v-card outlined class="dental-chart">
-                  <v-card-title class="subtitle-1">Dental Chart</v-card-title>
-                  <v-card-text>
-                    <div class="dental-grid">
-                      <!-- Upper Teeth -->
-                      <div class="teeth-row upper">
-                        <div
-                          v-for="tooth in upperTeeth"
-                          :key="tooth.number"
-                          class="tooth"
-                          :class="{ 'has-problem': tooth.hasProblem }"
-                          @click="selectTooth(tooth)"
-                        >
-                          <div class="tooth-number">{{ tooth.number }}</div>
-                          <v-icon size="40" color="primary">mdi-tooth-outline</v-icon>
-                        </div>
-                      </div>
+              <v-list-item>
+                <template v-slot:prepend>
+                  <v-icon color="error" size="small">mdi-alert-circle</v-icon>
+                </template>
+                <v-list-item-title class="text-subtitle-2">Problem</v-list-item-title>
+                <v-list-item-subtitle>{{ item.problem_id }}</v-list-item-subtitle>
+              </v-list-item>
 
-                      <!-- Lower Teeth -->
-                      <div class="teeth-row lower">
-                        <div
-                          v-for="tooth in lowerTeeth"
-                          :key="tooth.number"
-                          class="tooth"
-                          :class="{ 'has-problem': tooth.hasProblem }"
-                          @click="selectTooth(tooth)"
-                        >
-                          <v-icon size="40" color="primary">mdi-tooth-outline</v-icon>
-                          <div class="tooth-number">{{ tooth.number }}</div>
-                        </div>
-                      </div>
-                    </div>
-                  </v-card-text>
-                </v-card>
-              </v-col>
-            </v-row>
+              <v-list-item>
+                <template v-slot:prepend>
+                  <v-icon color="success" size="small">mdi-medical-bag</v-icon>
+                </template>
+                <v-list-item-title class="text-subtitle-2">Treatment</v-list-item-title>
+                <v-list-item-subtitle>{{ item.treatment_id }}</v-list-item-subtitle>
+              </v-list-item>
 
-            <!-- Treatment Details Section -->
-            <v-row class="mt-4">
-              <v-col cols="12">
-                <v-card outlined>
-                  <v-card-title class="subtitle-1">Treatment Details</v-card-title>
-                  <v-card-text>
-                    <v-row>
-                      <v-col cols="12" md="6">
-                        <v-select
-                          v-model="selectedProblem"
-                          :items="problems"
-                          label="Problem"
-                          outlined
-                          dense
-                        ></v-select>
-                      </v-col>
-                      <v-col cols="12" md="6">
-                        <v-select
-                          v-model="selectedTreatment"
-                          :items="treatments"
-                          label="Treatment"
-                          outlined
-                          dense
-                        ></v-select>
-                      </v-col>
-                      <v-col cols="12">
-                        <v-textarea
-                          v-model="notes"
-                          label="Notes"
-                          outlined
-                          auto-grow
-                          rows="3"
-                        ></v-textarea>
-                      </v-col>
-                    </v-row>
-                  </v-card-text>
-                </v-card>
-              </v-col>
-            </v-row>
-
-            <!-- Action Buttons -->
-            <v-row class="mt-4">
-              <v-col cols="12" class="text-right">
-                <v-btn color="error" class="mr-4" @click="resetForm"> Reset </v-btn>
-                <v-btn color="primary" @click="saveTreatment"> Save Treatment </v-btn>
-              </v-col>
-            </v-row>
+              <v-list-item v-if="item.notes">
+                <template v-slot:prepend>
+                  <v-icon color="info" size="small">mdi-note-text</v-icon>
+                </template>
+                <v-list-item-title class="text-subtitle-2">Notes</v-list-item-title>
+                <v-list-item-subtitle>{{ item.notes }}</v-list-item-subtitle>
+              </v-list-item>
+            </v-list>
           </v-card-text>
+
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn variant="text" color="primary" @click="editTreatment(item)">
+              Edit
+            </v-btn>
+            <v-btn
+              variant="text"
+              :color="item.status === 'treated' ? 'error' : 'success'"
+              @click="toggleStatus(item)"
+            >
+              {{ item.status === "treated" ? "Mark Pending" : "Mark Treated" }}
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-col>
+
+      <!-- Empty State -->
+      <v-col v-if="!filteredTreatments.length" cols="12">
+        <v-card color="grey-lighten-4" class="d-flex flex-column align-center pa-12">
+          <v-icon size="64" color="grey-darken-1" class="mb-4">
+            mdi-tooth-outline
+          </v-icon>
+          <div class="text-h5 text-grey-darken-1 mb-2">No Treatments Found</div>
+          <div class="text-body-1 text-medium-emphasis text-center">
+            {{
+              props.problemTreatments.length
+                ? "Try adjusting your filters to see more treatments"
+                : "Start by adding a new treatment"
+            }}
+          </div>
         </v-card>
       </v-col>
     </v-row>
+
+    <!-- Add/Edit Dialog -->
+    <v-dialog v-model="dialog" max-width="600px">
+      <v-card>
+        <v-card-title class="text-h5">
+          {{ editingTreatment ? "Edit Treatment" : "New Treatment" }}
+        </v-card-title>
+
+        <v-card-text>
+          <v-form ref="formRef" v-model="valid" @submit.prevent="handleSubmit">
+            <v-row>
+              <v-col cols="12" md="6">
+                <v-select
+                  v-model="form.visit_id"
+                  :items="sortedVisits"
+                  item-title="date"
+                  item-value="id"
+                  label="Visit Date*"
+                  :rules="[(v) => !!v || 'Visit is required']"
+                ></v-select>
+              </v-col>
+
+              <v-col cols="12" md="6">
+                <v-select
+                  v-model="form.tooth_id"
+                  :items="props.teeth"
+                  item-title="number"
+                  item-value="id"
+                  label="Tooth Number*"
+                  :rules="[(v) => !!v || 'Tooth is required']"
+                ></v-select>
+              </v-col>
+
+              <v-col cols="12" md="6">
+                <v-select
+                  v-model="form.problem_id"
+                  :items="props.problems"
+                  item-title="name"
+                  item-value="id"
+                  label="Problem*"
+                  :rules="[(v) => !!v || 'Problem is required']"
+                ></v-select>
+              </v-col>
+
+              <v-col cols="12" md="6">
+                <v-select
+                  v-model="form.treatment_id"
+                  :items="props.treatments"
+                  item-title="name"
+                  item-value="id"
+                  label="Treatment*"
+                  :rules="[(v) => !!v || 'Treatment is required']"
+                ></v-select>
+              </v-col>
+
+              <v-col cols="12">
+                <v-select
+                  v-model="form.status"
+                  :items="['pending', 'in_progress', 'treated']"
+                  label="Status*"
+                  :rules="[(v) => !!v || 'Status is required']"
+                ></v-select>
+              </v-col>
+
+              <v-col cols="12">
+                <v-textarea v-model="form.notes" label="Notes" rows="3"></v-textarea>
+              </v-col>
+            </v-row>
+          </v-form>
+        </v-card-text>
+
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="grey" variant="text" @click="handleDialogClose"> Cancel </v-btn>
+          <v-btn
+            color="primary"
+            :loading="loading"
+            :disabled="!valid"
+            @click="handleSubmit"
+          >
+            Save
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+
+    <!-- Snackbar for notifications -->
+    <v-snackbar
+      v-model="snackbar.show"
+      :color="snackbar.color"
+      :timeout="3000"
+      location="top"
+    >
+      {{ snackbar.text }}
+      <template v-slot:actions>
+        <v-btn variant="text" @click="snackbar.show = false"> Close </v-btn>
+      </template>
+    </v-snackbar>
   </v-container>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from "vue";
-import { Head } from "@inertiajs/vue3";
+import { ref, computed } from "vue";
+import { format } from "date-fns";
+import { useForm } from "@inertiajs/vue3";
 
-// Types
 interface Tooth {
-  number: number;
-  hasProblem: boolean;
+  id: number;
+  number: string;
+  name: string;
 }
 
-// Constants
-const PROBLEMS = [
-  "Cavity",
-  "Gingivitis",
-  "Root Canal",
-  "Broken Tooth",
-  "Wisdom Tooth",
-  "Periodontitis",
-] as const;
+interface Problem {
+  id: number;
+  name: string;
+}
 
-const TREATMENTS = [
-  "Filling",
-  "Cleaning",
-  "Extraction",
-  "Root Canal Treatment",
-  "Crown",
-  "Bridge",
-] as const;
+interface Treatment {
+  id: number;
+  name: string;
+}
+
+interface Visit {
+  id: string;
+  date: string;
+}
+
+interface ProblemTreatment {
+  id: string;
+  visit_id: string;
+  treatment_id: number;
+  problem_id: number;
+  tooth_id: number;
+  notes: string | null;
+  status: TreatmentStatus;
+  visit: Visit;
+  treatment: Treatment;
+  problem: Problem;
+  tooth: Tooth;
+  created_at: string;
+  updated_at: string;
+}
+
+interface Props {
+  problemTreatments: ProblemTreatment[];
+  visits: Visit[];
+  treatments: Treatment[];
+  problems: Problem[];
+  teeth: Tooth[];
+}
+
+type TreatmentStatus = "pending" | "in_progress" | "treated";
+
+const props = defineProps<Props>();
+
+const emit = defineEmits<{
+  (e: "treatment-updated"): void;
+  (e: "treatment-created"): void;
+}>();
 
 // State
-const patientName = ref<string>("");
-const patientId = ref<string>("");
-const treatmentDate = ref<string>(new Date().toISOString().substr(0, 10));
-const dateMenu = ref<boolean>(false);
-const selectedTooth = ref<Tooth | null>(null);
-const notes = ref<string>("");
-const selectedProblem = ref<typeof PROBLEMS[number] | null>(null);
-const selectedTreatment = ref<typeof TREATMENTS[number] | null>(null);
+const dialog = ref(false);
+const formRef = ref<HTMLFormElement | null>(null);
+const valid = ref(false);
+const loading = ref(false);
+const snackbar = ref({
+  show: false,
+  text: "",
+  color: "success",
+});
 
-// Reactive data
-const upperTeeth = reactive<Tooth[]>(
-  Array.from({ length: 16 }, (_, i) => ({
-    number: i + 1,
-    hasProblem: false,
-  }))
-);
+const initialFormState = {
+  visit_id: "",
+  treatment_id: null as number | null,
+  problem_id: null as number | null,
+  tooth_id: null as number | null,
+  notes: "",
+  status: "pending" as TreatmentStatus,
+};
 
-const lowerTeeth = reactive<Tooth[]>(
-  Array.from({ length: 16 }, (_, i) => ({
-    number: i + 17,
-    hasProblem: false,
-  }))
-);
+const form = ref({ ...initialFormState });
+const editingTreatment = ref<ProblemTreatment | null>(null);
+const filters = ref({
+  status: "all",
+  visit: null as string | null,
+  problem: null as number | null,
+  treatment: null as number | null,
+  search: "" as string,
+});
 
 // Computed
-const hasSelectedTeeth = computed(() =>
-  [...upperTeeth, ...lowerTeeth].some((tooth) => tooth.hasProblem)
-);
+const filteredTreatments = computed(() => {
+  return props.problemTreatments.filter((item) => {
+    const matchesStatus =
+      filters.value.status === "all" || item.status === filters.value.status;
+    const matchesVisit = !filters.value.visit || item.visit_id === filters.value.visit;
+    const matchesProblem =
+      !filters.value.problem || item.problem_id === filters.value.problem;
+    const matchesTreatment =
+      !filters.value.treatment || item.treatment_id === filters.value.treatment;
+    const matchesSearch =
+      !filters.value.search ||
+      item.notes?.toLowerCase().includes(filters.value.search.toLowerCase()) ||
+      item.problem.name.toLowerCase().includes(filters.value.search.toLowerCase()) ||
+      item.treatment.name.toLowerCase().includes(filters.value.search.toLowerCase());
 
-const isFormValid = computed(
-  () =>
-    patientName.value &&
-    patientId.value &&
-    hasSelectedTeeth.value &&
-    selectedProblem.value &&
-    selectedTreatment.value
-);
+    return (
+      matchesStatus && matchesVisit && matchesProblem && matchesTreatment && matchesSearch
+    );
+  });
+});
 
 // Methods
-const selectTooth = (tooth: Tooth) => {
-  tooth.hasProblem = !tooth.hasProblem;
-  selectedTooth.value = tooth.hasProblem ? tooth : null;
+const formatDate = (date: string) => {
+  return format(new Date(date), "MMM dd, yyyy");
+};
+
+const formatStatus = (status: string) => {
+  return status.replace("_", " ").replace(/\b\w/g, (l) => l.toUpperCase());
+};
+
+const getStatusColor = (status: TreatmentStatus): string => {
+  const statusColors = {
+    treated: "success",
+    in_progress: "info",
+    pending: "warning",
+  };
+  return statusColors[status];
+};
+
+const getStatusIcon = (status: TreatmentStatus): string => {
+  const statusIcons = {
+    treated: "mdi-check-circle",
+    in_progress: "mdi-progress-clock",
+    pending: "mdi-clock-outline",
+  };
+  return statusIcons[status];
 };
 
 const resetForm = () => {
-  patientName.value = "";
-  patientId.value = "";
-  treatmentDate.value = new Date().toISOString().substr(0, 10);
-  notes.value = "";
-  selectedProblem.value = null;
-  selectedTreatment.value = null;
-  upperTeeth.forEach((tooth) => (tooth.hasProblem = false));
-  lowerTeeth.forEach((tooth) => (tooth.hasProblem = false));
+  form.value = { ...initialFormState };
+  editingTreatment.value = null;
+  if (formRef.value) {
+    formRef.value.resetValidation();
+  }
 };
 
-const saveTreatment = async () => {
-  if (!isFormValid.value) {
-    return;
+const showNotification = (text: string, color: "success" | "error" = "success") => {
+  snackbar.value = {
+    show: true,
+    text,
+    color,
+  };
+};
+
+const handleDialogClose = () => {
+  dialog.value = false;
+  resetForm();
+};
+
+const editTreatment = (treatment: ProblemTreatment) => {
+  editingTreatment.value = treatment;
+  form.value = {
+    visit_id: treatment.visit_id,
+    treatment_id: treatment.treatment_id,
+    problem_id: treatment.problem_id,
+    tooth_id: treatment.tooth_id,
+    notes: treatment.notes || "",
+    status: treatment.status,
+  };
+  dialog.value = true;
+};
+
+const toggleStatus = async (treatment: ProblemTreatment) => {
+  try {
+    const form = useForm({
+      status: treatment.status === "treated" ? "pending" : "treated",
+    });
+
+    await form.patch(route("problem-treatments.update", treatment.id), {
+      preserveScroll: true,
+    });
+
+    showNotification("Treatment status updated successfully");
+    emit("treatment-updated");
+  } catch (error) {
+    showNotification("Failed to update treatment status", "error");
   }
+};
+
+const handleSubmit = async () => {
+  if (!formRef.value?.validate()) return;
+
+  loading.value = true;
+  const treatmentForm = useForm(form.value);
 
   try {
-    // TODO: Implement API call
-    const treatmentData = {
-      patientName: patientName.value,
-      patientId: patientId.value,
-      treatmentDate: treatmentDate.value,
-      selectedTeeth: [...upperTeeth, ...lowerTeeth].filter((t) => t.hasProblem),
-      problem: selectedProblem.value,
-      treatment: selectedTreatment.value,
-      notes: notes.value,
-    };
-
-    console.log("Saving treatment...", treatmentData);
-    // await $inertia.post('/treatments', treatmentData);
+    if (editingTreatment.value) {
+      await treatmentForm.patch(
+        route("problem-treatments.update", editingTreatment.value.id),
+        {
+          preserveScroll: true,
+        }
+      );
+      showNotification("Treatment updated successfully");
+      emit("treatment-updated");
+    } else {
+      await treatmentForm.post(route("problem-treatments.store"), {
+        preserveScroll: true,
+      });
+      showNotification("Treatment created successfully");
+      emit("treatment-created");
+    }
+    handleDialogClose();
   } catch (error) {
-    console.error("Error saving treatment:", error);
+    showNotification(
+      `Failed to ${editingTreatment.value ? "update" : "create"} treatment`,
+      "error"
+    );
+  } finally {
+    loading.value = false;
   }
 };
 </script>
 
 <style scoped>
-.dental-chart {
-  min-height: 400px;
+.border-treated {
+  border-left: 4px solid rgb(var(--v-theme-success));
 }
 
-.dental-grid {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-  padding: 1rem;
-}
-
-.teeth-row {
-  display: flex;
-  justify-content: space-between;
-  padding: 1rem;
-}
-
-.tooth {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
-  padding: 0.5rem;
-  border-radius: 4px;
-  transition: all 0.3s ease;
-}
-
-.tooth:hover {
-  background-color: rgba(0, 0, 0, 0.05);
-}
-
-.tooth.has-problem {
-  background-color: rgba(244, 67, 54, 0.1);
-}
-
-.tooth-number {
-  font-size: 0.75rem;
-  color: rgba(0, 0, 0, 0.6);
-}
-
-.upper {
-  border-bottom: 2px solid rgba(0, 0, 0, 0.1);
-}
-
-.lower {
-  border-top: 2px solid rgba(0, 0, 0, 0.1);
+.v-list-item-subtitle {
+  white-space: normal !important;
 }
 </style>

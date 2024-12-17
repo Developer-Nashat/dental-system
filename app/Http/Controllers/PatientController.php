@@ -18,7 +18,7 @@ class PatientController extends Controller
     {
         try {
             $patients = Patient::all();
-            // dd($patients);
+
             return inertia('Management/Patient', compact('patients'));
         } catch (\Exception $e) {
             return inertia('Management/Patient', [

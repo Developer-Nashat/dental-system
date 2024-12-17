@@ -8,6 +8,7 @@ use Inertia\Inertia;
 use App\Models\Visit;
 use App\Models\Status;
 use App\Models\Patient;
+use App\Models\ProblemTreatment;
 use Illuminate\Http\Request;
 
 class VisitController extends Controller
@@ -80,9 +81,29 @@ class VisitController extends Controller
 
     public function show($id)
     {
-        $visit = Visit::findOrFail($id);
-        return Inertia::render('Management/Visit/Show', [
-            'visit' => $visit
+        $problemTreatments = ProblemTreatment::where('visit_id', $id)->with([
+            'problem',
+            'treatment',
+            'tooth',
+            'visit'
+        ])->get();
+
+        // dd($visit = Visit::findOrFail($id)->with([
+
+        //     'teeth'
+        // ])->first());
+
+        $visit = Visit::findOrFail($id)->with([
+            'patient',
+            'dentist',
+            'status',
+            'teeth'
+        ])->first();
+
+        // dd($visit);
+        return Inertia::render('Management/PatientVisit', [
+            'visit' => $visit,
+            'problemTreatments' => $problemTreatments
         ]);
     }
 
