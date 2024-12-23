@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class ProblemTreatment extends Model
 {
@@ -12,6 +13,15 @@ class ProblemTreatment extends Model
     use HasFactory, HasUuids;
 
     public $guarded = [];
+
+    protected static function booted()
+    {
+        parent::boot();
+
+        self::creating(function (ProblemTreatment $problemTreatment) {
+            $problemTreatment->id = Str::uuid();
+        });
+    }
 
     public function visit()
     {

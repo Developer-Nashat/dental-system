@@ -13,7 +13,7 @@ class ProblemTreatmentController extends Controller
         if (request()->wantsJson()) {
             return ProblemTreatment::with(['problem', 'treatment', 'tooth', 'visit'])->get();
         }
-        
+
         $problemTreatments = ProblemTreatment::all();
         return inertia('Management/ProblemTreatment', compact('problemTreatments'));
     }
@@ -25,28 +25,25 @@ class ProblemTreatmentController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        // dd($request);
+
+        $validatedData = $request->validate([
             'visit_id' => 'required',
-            'problem_catalog_id' => 'required',
+            'problem_id' => 'required',
             'treatment_id' => 'required',
-            'tooth_id' => 'required|integer|between:11,48',
+            'tooth_id' => 'required|integer',
             'notes' => 'nullable|string',
         ]);
 
-        $problemTreatment = ProblemTreatment::create([
-            'visit_id' => $request->visit_id,
-            'problem_catalog_id' => $request->problem_catalog_id,
-            'treatment_id' => $request->treatment_id,
-            'tooth_id' => $request->tooth_id,
-            'notes' => $request->notes,
-            'status' => 'pending'
-        ]);
+        // dd($validatedData);
 
-        if ($request->wantsJson()) {
-            return response()->json($problemTreatment->load(['problem', 'treatment', 'tooth', 'visit']));
-        }
+        $problemTreatment = ProblemTreatment::create($validatedData);
 
-        return redirect()->route('problemTreatment');
+        // if ($request->wantsJson()) {
+        //     return response()->json($problemTreatment->load(['problem', 'treatment', 'tooth', 'visit']));
+        // }
+        return to_route('PatientVisit', $validatedData['visit_id'])->with('message', 'تم الإضافة بنجاح.');
+        // return redirect()->route('PatientVisit', $validatedData['visit_id'])->with('message', 'تم الإضافة بنجاح.');
     }
 
     public function show(ProblemTreatment $problemTreatment)
@@ -61,24 +58,22 @@ class ProblemTreatmentController extends Controller
 
     public function update(Request $request, ProblemTreatment $problemTreatment)
     {
-        $request->validate([
+        $validatedData = $request->validate([
             'visit_id' => 'required',
-            'problem_catalog_id' => 'required',
+            'problem_id' => 'required',
             'treatment_id' => 'required',
+            'tooth_id' => 'required|integer',
+            'notes' => 'nullable|string',
         ]);
 
-        $problemTreatment->update([
-            'visit_id' => $request->visit_id,
-            'problem_catalog_id' => $request->problem_catalog_id,
-            'treatment_id' => $request->treatment_id,
-        ]);
+        $problemTreatment->update($validatedData);
 
-        return redirect()->route('problemTreatments.index');
+        return redirect()->route('PatientVisit', $validatedData['visit_id'])->with('message', 'تم التعديل بنجاح.');
     }
 
     public function destroy(ProblemTreatment $problemTreatment)
     {
         $problemTreatment->delete();
-        return redirect()->route('problemTreatments.index');
+        return redirect()->route('PatientVisit', $problemTreatment->visit_id)->with('message', 'تم الحذف بنجاح.');
     }
 }

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('patients', function (Blueprint $table) {
             $table->id();
             $table->string('name')->unique();
-            $table->smallInteger('age')->nullable();
+            $table->date('dob')->nullable();
             $table->char('gender', 1)->checkIn(['M', 'F']);
             $table->string('identification_no')->unique()->nullable();
             $table->string('address')->nullable();
@@ -22,7 +22,10 @@ return new class extends Migration
             $table->string('phone_2')->nullable();
             $table->text('note')->nullable();
             $table->string('account_id')->nullable();
+            $table->uuid('affiliation_id');
             $table->timestamps();
+
+            $table->foreign('affiliation_id')->references('id')->on('affiliations')->onDelete('cascade')->constrained();
         });
     }
 

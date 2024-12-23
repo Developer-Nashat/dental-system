@@ -8,7 +8,10 @@ use Inertia\Inertia;
 use App\Models\Visit;
 use App\Models\Status;
 use App\Models\Patient;
+use App\Models\ProblemCatalog;
 use App\Models\ProblemTreatment;
+use App\Models\Tooth;
+use App\Models\Treatment;
 use Illuminate\Http\Request;
 
 class VisitController extends Controller
@@ -85,13 +88,11 @@ class VisitController extends Controller
             'problem',
             'treatment',
             'tooth',
-            'visit'
         ])->get();
 
-        // dd($visit = Visit::findOrFail($id)->with([
-
-        //     'teeth'
-        // ])->first());
+        $problems = ProblemCatalog::all();
+        $treatments = Treatment::all();
+        $teeth = Tooth::all();
 
         $visit = Visit::findOrFail($id)->with([
             'patient',
@@ -103,7 +104,10 @@ class VisitController extends Controller
         // dd($visit);
         return Inertia::render('Management/PatientVisit', [
             'visit' => $visit,
-            'problemTreatments' => $problemTreatments
+            'problemTreatments' => $problemTreatments,
+            'problems' => $problems,
+            'treatments' => $treatments,
+            'teeth' => $teeth
         ]);
     }
 

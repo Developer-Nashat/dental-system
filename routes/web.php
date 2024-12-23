@@ -77,8 +77,8 @@ Route::middleware('auth')->group(function () {
         Route::post('/problemTreatment', 'store')->name("problemTreatment.store");
         Route::get('/problemTreatment/{id}', 'show')->name('problemTreatment.show');
         Route::get('/problemTreatment/{id}/edit', 'edit')->name('problemTreatment.edit');
-        Route::patch('/problemTreatment/{problemTreatment}', 'update')->name('visit.update');
-        Route::delete('/problemTreatment/{problemTreatment}', 'destroy')->name('visit.delete');
+        Route::patch('/problemTreatment/{problemTreatment}', 'update')->name('problemTreatment.update');
+        Route::delete('/problemTreatment/{problemTreatment}', 'destroy')->name('problemTreatment.delete');
     });
 });
 
